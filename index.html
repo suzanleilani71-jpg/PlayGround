@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07030f" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0418'/%3E%3Cpath d='M14 40h7l5-18 6 26 6-20 5 12h7' fill='none' stroke='%23ff4fd8' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<title>BEATFALL — Roguelike Rhythm Descent</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div id="backdrop" aria-hidden="true">
+  <canvas id="bgCanvas"></canvas>
+  <div class="bg-glow"></div>
+  <div class="bg-sun"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-scan"></div>
+</div>
+
+<div id="app">
+  <!-- ============ TITLE ============ -->
+  <section id="screen-title" class="screen menu title active">
+    <div class="title-top">
+      <div class="kicker"><span class="dot"></span> A ROGUELIKE RHYTHM DESCENT</div>
+    </div>
+    <div class="title-main">
+      <div class="logo-wrap">
+        <div class="logo-eq" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <h1 class="logo">BEAT<span>FALL</span></h1>
+        <div class="logo-rule"><span></span><b>4 LANES · ENDLESS DEPTH</b><span></span></div>
+      </div>
+      <p class="tagline">The tower beats like a heart. Every note you strike<br class="wide-only" /> cuts deeper — every miss cuts back.</p>
+      <div class="title-actions">
+        <button id="startBtn" class="btn primary xl">START RUN<small>NEW SEED</small></button>
+        <button id="howBtn" class="btn ghost">HOW TO PLAY</button>
+      </div>
+      <div class="best-row">
+        <div><span>BEST DEPTH</span><b id="bestDepth">—</b></div>
+        <div class="sep"></div>
+        <div><span>BEST SCORE</span><b id="bestScore">—</b></div>
+      </div>
+    </div>
+    <div class="title-bottom">
+      <div class="tip">TAP LANES ON THE BEAT · PERFECTS CHARGE FEVER · CLEAR FLOORS · PICK RESONANCES</div>
+    </div>
+  </section>
+
+  <!-- ============ BATTLE ============ -->
+  <section id="screen-battle" class="screen battle">
+    <header class="hud-top">
+      <div class="depth-chip">
+        <span class="label">DEPTH</span>
+        <b id="depthVal">01</b>
+      </div>
+      <div class="vitals">
+        <div class="hp-line">
+          <div class="hp-bar"><div id="hpFill"></div><i class="hp-ghost" id="hpGhost"></i></div>
+          <span class="hp-num" id="hpText">100</span>
+          <span class="shield-num" id="shieldText">◈ 0</span>
+        </div>
+        <div class="vitals-sub">
+          <span id="comboMini">COMBO ×1.00</span>
+          <span id="attackStatus" class="attack-status">STABLE</span>
+        </div>
+      </div>
+      <div class="score-box">
+        <span class="label">SCORE</span>
+        <b id="scoreVal">0</b>
+      </div>
+      <button id="pauseBtn" class="icon-btn" aria-label="Pause">
+        <span></span><span></span>
+      </button>
+    </header>
+
+    <div class="enemy-panel">
+      <div class="enemy-row">
+        <span class="enemy-name" id="enemyName">GLASS WARDEN</span>
+        <span class="boss-tag hidden" id="bossTag">BOSS</span>
+        <span class="enemy-hp" id="enemyHpText">340 / 340</span>
+      </div>
+      <div class="enemy-bar"><div id="enemyFill"></div><div class="bar-sheen"></div></div>
+    </div>
+
+    <div class="stage" id="stage">
+      <canvas id="gameCanvas"></canvas>
+      <div class="coach" id="coach"></div>
+      <div class="fever-banner" id="feverBanner">FEVER // DOUBLE DAMAGE</div>
+    </div>
+
+    <footer class="hud-bottom">
+      <div class="lane-hints" aria-hidden="true">
+        <span>D</span><span>F</span><span>J</span><span>K</span>
+      </div>
+      <div class="bottom-tip" id="bottomTip">HIT THE LINE</div>
+      <button id="feverBtn" class="fever-btn" disabled>
+        <span class="fever-inner">
+          <b>FEVER</b>
+          <small id="feverPct">0%</small>
+        </span>
+        <span class="fever-spark">✦</span>
+      </button>
+    </footer>
+  </section>
+
+  <!-- ============ REWARD ============ -->
+  <section id="screen-reward" class="screen menu reward">
+    <div class="reward-head">
+      <div class="kicker"><span class="dot"></span> FLOOR CLEARED · DEPTH <b id="rewardDepth">01</b></div>
+      <h2>TAKE A RESONANCE</h2>
+      <div class="reward-sub" id="rewardSub">+18 HP recovered · pick one upgrade to descend</div>
+      <div class="reward-stats" id="rewardStats"></div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="reward-foot">
+      <div class="owned" id="ownedChips"></div>
+      <button id="descendBtn" class="btn primary" disabled>DESCEND</button>
+    </div>
+  </section>
+
+  <!-- ============ GAME OVER ============ -->
+  <section id="screen-over" class="screen menu over">
+    <div class="over-inner">
+      <div class="kicker danger" id="overKicker">RUN ENDED</div>
+      <h1 class="over-title" id="overTitle">SIGNAL LOST</h1>
+      <p class="over-sub" id="overSub">The tower keeps its rhythm. You do not.</p>
+      <div class="over-stats">
+        <div><span>DEPTH</span><b id="overDepth">1</b></div>
+        <div><span>SCORE</span><b id="overScore">0</b></div>
+        <div><span>BEST COMBO</span><b id="overCombo">0</b></div>
+        <div><span>ACCURACY</span><b id="overAcc">0%</b></div>
+      </div>
+      <div class="over-actions">
+        <button id="retryBtn" class="btn primary">NEW RUN</button>
+        <button id="homeBtn" class="btn ghost">TITLE</button>
+      </div>
+      <div class="best-line" id="overBest">BEST DEPTH —</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ HOW TO PLAY ============ -->
+<div id="howModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="kicker"><span class="dot"></span> FIELD MANUAL</div>
+    <h2>HOW TO DESCEND</h2>
+    <div class="how-grid">
+      <div class="how-item"><span class="how-ico">◎</span><div><b>Strike the lane</b><p>Notes fall toward the bright line. Tap anywhere in a lane — or press <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> — as a note crosses it.</p></div></div>
+      <div class="how-item"><span class="how-ico">✧</span><div><b>Perfects build shield</b><p>Accurate hits charge a shield that soaks enemy strikes. Misses shred your HP and reset your combo.</p></div></div>
+      <div class="how-item"><span class="how-ico">✦</span><div><b>Hold the tail</b><p>Long notes keep dealing damage while your finger stays down. Release whenever — you just stop the sustain.</p></div></div>
+      <div class="how-item"><span class="how-ico">⚡</span><div><b>Unleash Fever</b><p>Perfects fill the FEVER meter. Pop it for double damage and boosted score. It's the run-saver.</p></div></div>
+      <div class="how-item"><span class="how-ico">◈</span><div><b>Kill before the song ends</b><p>If the track finishes with the enemy alive, it finishes you. Clear the floor, choose a resonance, go deeper.</p></div></div>
+      <div class="how-item"><span class="how-ico">☠</span><div><b>Boss every 5 depths</b><p>Denser patterns, faster tempo, more strikes. Endless descent — your best depth is the score.</p></div></div>
+    </div>
+    <button id="howClose" class="btn primary">GOT IT</button>
+  </div>
+</div>
+
+<!-- ============ PAUSE ============ -->
+<div id="pauseModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card pause-card">
+    <div class="kicker"><span class="dot"></span> PAUSED</div>
+    <h2>HOLD THE BEAT</h2>
+    <div class="pause-actions">
+      <button id="resumeBtn" class="btn primary">RESUME</button>
+      <button id="soundBtn" class="btn ghost">SOUND: ON</button>
+      <button id="quitBtn" class="btn ghost danger-text">ABANDON RUN</button>
+    </div>
+    <p class="pause-note">Tip: on a phone, tap with two thumbs for chord notes. Sustain holds with a finger planted in the lane.</p>
+  </div>
+</div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
